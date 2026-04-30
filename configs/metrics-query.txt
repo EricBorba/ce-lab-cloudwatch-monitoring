@@ -1,0 +1,157 @@
+# CloudWatch Metrics Queries
+
+1. CPU Utilization Alarm Configuration
+
+---
+
+Alarm Name:
+high-cpu-alarm
+
+Description:
+Alert when CPU > 80%
+
+Namespace:
+AWS/EC2
+
+Metric Name:
+CPUUtilization
+
+Statistic:
+Average
+
+Period:
+300 seconds
+
+Evaluation Periods:
+2
+
+Threshold:
+80%
+
+Comparison Operator:
+GreaterThanThreshold
+
+Instance ID:
+i-093f98279195ce0d9
+
+SNS Notification Target:
+arn:aws:sns:eu-central-1:871939031886:ec2-alerts
+
+CLI Command Used:
+aws cloudwatch put-metric-alarm 
+--alarm-name high-cpu-alarm 
+--alarm-description "Alert when CPU > 80%" 
+--metric-name CPUUtilization 
+--namespace AWS/EC2 
+--statistic Average 
+--period 300 
+--evaluation-periods 2 
+--threshold 80 
+--comparison-operator GreaterThanThreshold 
+--dimensions Name=InstanceId,Value=i-093f98279195ce0d9 
+--alarm-actions arn:aws:sns:eu-central-1:871939031886:ec2-alerts
+
+Purpose:
+This metric query monitors EC2 CPU usage and triggers an alarm notification when average CPU utilization exceeds 80% for two consecutive 5-minute periods.
+
+---
+
+2. CPU Anomaly Detection Alarm Configuration
+
+---
+
+Alarm Name:
+agent-cpu-above85
+
+Type:
+AWS::CloudWatch::Alarm
+
+Actions Enabled:
+true
+
+Comparison Operator:
+GreaterThanUpperThreshold
+
+Evaluation Periods:
+1
+
+Datapoints to Alarm:
+1
+
+Threshold Metric ID:
+ad1
+
+Treat Missing Data:
+missing
+
+SNS Notification Target:
+arn:aws:sns:eu-central-1:871939031886:ec2-alerts
+
+Metrics:
+
+  [m1] - Source Metric
+    Namespace:       CWAgent
+    Metric Name:     cpu_usage_user
+    Statistic:       Average
+    Period:          300 seconds
+    Dimensions:
+      host:          ip-172-31-35-32
+      cpu:           cpu-total
+
+  [ad1] - Anomaly Detection Band (Threshold)
+    Label:           cpu_usage_user (expected)
+    Expression:      ANOMALY_DETECTION_BAND(m1, 85)
+
+CloudFormation Resource (JSON):
+{
+    "Type": "AWS::CloudWatch::Alarm",
+    "Properties": {
+        "AlarmName": "agent-cpu-above85",
+        "Tags": [],
+        "ActionsEnabled": true,
+        "OKActions": [],
+        "AlarmActions": [
+            "arn:aws:sns:eu-central-1:871939031886:ec2-alerts"
+        ],
+        "InsufficientDataActions": [],
+        "Dimensions": [],
+        "EvaluationPeriods": 1,
+        "DatapointsToAlarm": 1,
+        "ThresholdMetricId": "ad1",
+        "ComparisonOperator": "GreaterThanUpperThreshold",
+        "TreatMissingData": "missing",
+        "Metrics": [
+            {
+                "Id": "m1",
+                "ReturnData": true,
+                "MetricStat": {
+                    "Metric": {
+                        "Namespace": "CWAgent",
+                        "MetricName": "cpu_usage_user",
+                        "Dimensions": [
+                            {
+                                "Name": "host",
+                                "Value": "ip-172-31-35-32"
+                            },
+                            {
+                                "Name": "cpu",
+                                "Value": "cpu-total"
+                            }
+                        ]
+                    },
+                    "Period": 300,
+                    "Stat": "Average"
+                }
+            },
+            {
+                "Id": "ad1",
+                "Label": "cpu_usage_user (expected)",
+                "ReturnData": true,
+                "Expression": "ANOMALY_DETECTION_BAND(m1, 85)"
+            }
+        ]
+    }
+}
+
+Purpose:
+This metric query monitors CPU usage from the CloudWatch Agent on host ip-172-31-35-32 using anomaly detection. Instead of a fixed threshold, it uses ANOMALY_DETECTION_BAND with a model trained on the cpu_usage_user metric to establish an expected upper bound. The alarm triggers when the average CPU usage over a single 5-minute period exceeds the upper boundary of the anomaly detection band (trained with a sensitivity value of 85).

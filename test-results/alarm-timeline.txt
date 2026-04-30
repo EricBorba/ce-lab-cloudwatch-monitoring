@@ -1,0 +1,74 @@
+# Alarm Timeline - high-cpu-alarm
+# Lab M2.06 - CloudWatch Monitoring and Alarms
+# Date: 2026-04-30
+# Instance: i-093f98279195ce0d9 (ip-172-31-35-32)
+# Region: eu-central-1
+
+================================================================================
+TIMELINE OF EVENTS
+================================================================================
+
+TIME (UTC)       | EVENT
+-----------------|--------------------------------------------------------------
+~07:20:00        | stress --cpu 2 --timeout 600s command executed on instance
+                 | Two CPU hog workers spawned (PID 1113)
+                 |
+~07:21:00        | CPU utilization begins rising rapidly toward 100%
+                 |
+07:31:00         | [DATAPOINT 1] CloudWatch records CPUUtilization = 99.9953%
+                 | First evaluation period above threshold (80%) captured
+                 |
+07:36:00         | [DATAPOINT 2] CloudWatch records CPUUtilization = 100.0%
+                 | Second consecutive evaluation period above threshold captured
+                 | (2/2 required datapoints now exceeded threshold)
+                 |
+07:41:26         | [ALARM TRIGGERED] CloudWatch transitions: OK -> ALARM
+                 | Alarm: high-cpu-alarm
+                 | Reason: Threshold Crossed: 2 datapoints [100.0 (07:36:00),
+                 |         99.9953 (07:31:00)] were greater than threshold (80.0)
+                 | SNS notification published to ec2-alerts topic
+                 |
+~07:41:30        | Email notification delivered to eric.borba@gmail.com
+                 | via SNS subscription (confirmed)
+                 |
+~07:30:00        | stress process completes (600s elapsed)
+                 | CPU utilization drops back to near-baseline
+                 |
+~08:10:00        | CloudWatch records CPU back below threshold for required
+                 | evaluation periods
+                 |
+~08:10:30        | [ALARM RESOLVED] CloudWatch transitions: ALARM -> OK
+                 | Alarm normalized; instance back in healthy state
+
+================================================================================
+SUMMARY
+================================================================================
+
+  Alarm Name          : high-cpu-alarm
+  Alarm Description   : Alert when CPU > 80%
+  Namespace           : AWS/EC2
+  Metric              : CPUUtilization
+  Threshold           : 80%
+  Evaluation Periods  : 2 x 5-minute periods (10 min to trigger)
+
+  Stress Test Start   : ~07:20:00 UTC
+  Alarm Triggered At  : 07:41:26 UTC
+  Time to Alarm       : ~21 minutes (2 evaluation periods + CloudWatch delay)
+  Stress Test End     : ~08:10:00 UTC  (600s after start)
+  Alarm Resolved At   : ~08:10:30 UTC
+  Total Alarm Duration: ~29 minutes
+
+  Notification Sent   : YES
+  Notification Target : eric.borba@gmail.com (SNS email subscription)
+  Recovery Confirmed  : YES
+
+================================================================================
+NOTES
+================================================================================
+
+- CloudWatch alarm latency is expected: with Period=300s and EvaluationPeriods=2,
+  the minimum time from threshold breach to ALARM state is ~10 minutes.
+- The alarm normalized ("OK state") shortly after the stress test finished,
+  confirming the monitoring pipeline is functioning end-to-end.
+- Both the standard threshold alarm (high-cpu-alarm) and the anomaly detection
+  alarm (agent-cpu-above85) were active during this test.

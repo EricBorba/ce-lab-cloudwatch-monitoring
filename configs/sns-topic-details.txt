@@ -1,0 +1,28 @@
+# SNS Topic Details
+
+Topic Name:
+ec2-alerts
+
+Topic ARN:
+arn:aws:sns:eu-central-1:871939031886:ec2-alerts
+
+AWS Region:
+eu-central-1
+
+Subscription Protocol:
+email
+
+Subscription Endpoint:
+[eric.borba@gmail.com](mailto:eric.borba@gmail.com)
+
+Subscription Status:
+Confirmed
+
+Subscription ARN:
+arn:aws:sns:eu-central-1:871939031886:ec2-alerts:6a847857-4712-4a05-a2cf-b2986c473f8f
+
+Purpose:
+This SNS topic is used to send CloudWatch alarm notifications for EC2 monitoring alerts.
+
+Connected CloudWatch Alarm:
+high-cpu-alarm

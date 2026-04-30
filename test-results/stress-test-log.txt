@@ -1,0 +1,76 @@
+# Stress Test Log - EC2 CPU Utilization Test
+# Lab M2.06 - CloudWatch Monitoring and Alarms
+# Date: 2026-04-30
+# Instance: ip-172-31-35-32 (i-093f98279195ce0d9)
+# Region: eu-central-1
+
+================================================================================
+STRESS TEST EXECUTION
+================================================================================
+
+Command executed:
+  ubuntu@ip-172-31-35-32:~$ stress --cpu 2 --timeout 600s
+
+Tool output:
+  stress: info: [1113] dispatching hogs: 2 cpu, 0 io, 0 vm, 0 hdd
+  stress: info: [1113] successful run completed in 600s
+
+Test Parameters:
+  - CPU workers spawned : 2
+  - Test duration       : 600 seconds (10 minutes)
+  - I/O workers         : 0
+  - VM workers          : 0
+  - HDD workers         : 0
+  - Process ID (hog)    : 1113
+
+================================================================================
+OBSERVED METRICS DURING TEST
+================================================================================
+
+Approximate start time : ~07:20 UTC (2026-04-30)
+Alarm trigger window   : 07:21 UTC - 07:41 UTC
+
+CPU Utilization readings captured by CloudWatch (CWAgent - cpu_usage_user):
+  - 07:21:00 UTC  ~  0% (baseline, pre-stress)
+  - 07:26:00 UTC  ~ 30% (stress ramping up)
+  - 07:31:00 UTC  ~ 99.9953% (full load - datapoint 1 above threshold)
+  - 07:36:00 UTC  ~ 100.0%   (full load - datapoint 2 above threshold)
+  - 07:41:26 UTC  → CloudWatch ALARM state triggered
+  - ~08:10:00 UTC → CPU utilization returned to baseline
+  - ~08:10:30 UTC → Alarm normalized (OK state) around 07:30h UTC (recovery)
+
+Threshold crossed:
+  Alarm: high-cpu-alarm
+  Threshold: 80%
+  Consecutive evaluation periods exceeded: 2 (each 5 minutes)
+  Datapoints that crossed threshold:
+    [1] 100.0000   @ 30/04/26 07:36:00 UTC
+    [2]  99.9953   @ 30/04/26 07:31:00 UTC
+
+================================================================================
+ALARM NOTIFICATION TRIGGERED
+================================================================================
+
+  Alarm Name    : high-cpu-alarm
+  State Change  : OK -> ALARM
+  Timestamp     : Thursday 30 April, 2026 07:41:26 UTC
+  SNS Topic     : arn:aws:sns:eu-central-1:871939031886:ec2-alerts
+  Notification  : Email sent to eric.borba@gmail.com
+
+================================================================================
+RESULT
+================================================================================
+
+  Status         : SUCCESS
+  Alarm fired    : YES (as expected)
+  Email received : YES
+  Recovery       : YES (alarm returned to OK state after stress test completed)
+
+Notes:
+  - The 2-worker CPU stress fully saturated the available CPU, pushing utilization
+    to ~100% for the entire 600-second duration.
+  - CloudWatch required 2 consecutive 5-minute evaluation periods above 80%
+    before transitioning to ALARM state, which added ~10 minutes of lag between
+    test start and alarm notification.
+  - After the stress process completed, CPU returned to near-zero and the alarm
+    normalized back to OK state.

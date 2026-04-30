@@ -1,0 +1,28 @@
+{
+  "Type": "AWS::CloudWatch::Alarm",
+  "Properties": {
+    "AlarmName": "high-cpu-alarm",
+    "AlarmDescription": "Alert when CPU > 80%",
+    "Tags": [],
+    "ActionsEnabled": true,
+    "OKActions": [],
+    "AlarmActions": [
+      "arn:aws:sns:eu-central-1:871939031886:ec2-alerts"
+    ],
+    "InsufficientDataActions": [],
+    "MetricName": "CPUUtilization",
+    "Namespace": "AWS/EC2",
+    "Statistic": "Average",
+    "Dimensions": [
+      {
+        "Name": "InstanceId",
+        "Value": "i-093f98279195ce0d9"
+      }
+    ],
+    "Period": 300,
+    "EvaluationPeriods": 2,
+    "DatapointsToAlarm": 2,
+    "Threshold": 80,
+    "ComparisonOperator": "GreaterThanThreshold"
+  }
+}
